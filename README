@@ -1,3 +1,20 @@
+------------------------------------------------------------------------------
+Update: GTK Linux build
+------------------------------------------------------------------------------
+
+Build and Test against xulrunner-20.0.1 / firefox-20.0.1
+
+@ gtk/x11
+  - sh autogen.sh
+  - ./configure
+  - make
+  - make install
+@ gtk/test
+  - make -f Makefile.x11
+
+------------------------------------------------------------------------------
+Gist Portion
+------------------------------------------------------------------------------
 
 This is a visual studio project that we're using at Gist. We build this as a
 static library that we include into our Outlook plugin.
@@ -12,3 +29,4 @@ InitEmbedding.
 This is a copy of https://wiki.mozilla.org/Embedding/NewApi/Win32
 The main repository is in:
 hg clone http://hg.mozilla.org/incubator/embedding/ mozembed
+
