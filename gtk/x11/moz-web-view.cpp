@@ -46,32 +46,32 @@ public:
     virtual void SetTitle(const char *new_title) {
         update_property (mView, PROP_TITLE, new_title);
         g_signal_emit (mView, signals[TITLE_CHANGED],
-                       NULL, new_title);
+                       0, new_title);
     }
 
     virtual void StatusChanged(const char *new_status, PRUint32 flags) {
         update_property (mView, PROP_STATUS, new_status);
         g_signal_emit (mView, signals[STATUS_CHANGED],
-                       NULL, new_status);
+                       0, new_status);
     }
 
     virtual void LocationChanged(const char *new_uri) {
         update_property (mView, PROP_LOCATION, new_uri);
         g_signal_emit (mView, signals[LOCATION_CHANGED],
-                       NULL, new_uri);
+                       0, new_uri);
     }
 
     virtual PRBool OpenURI(const char* new_uri) {
         gboolean   abort_load = FALSE;
         update_property (mView, PROP_REQUESTED_URI, new_uri);
         g_signal_emit (mView, signals[URI_REQUESTED],
-                       NULL, new_uri, &abort_load);
+                       0, new_uri, &abort_load);
 
         return abort_load;
     }
 
     virtual void DocumentLoaded() {
-        g_signal_emit (mView, signals[DOCUMENT_LOADED], NULL);
+        g_signal_emit (mView, signals[DOCUMENT_LOADED], 0);
     }
 
     private:
@@ -335,4 +335,54 @@ moz_web_view_load_data(MozWebView  *view,
     g_return_if_fail(len > 0);
 
     view->priv->view->LoadData(base_uri, content_type, (PRUint8 *)data, (PRUint32)len);
+}
+
+// added by kerpz@yahoo.com
+
+void
+moz_web_view_go_back(MozWebView *view)
+{
+    g_return_if_fail(MOZ_IS_WEB_VIEW(view));
+
+    view->priv->view->GoBack();
+}
+
+void
+moz_web_view_go_forward(MozWebView *view)
+{
+    g_return_if_fail(MOZ_IS_WEB_VIEW(view));
+
+    view->priv->view->GoForward();
+}
+
+void
+moz_web_view_reload(MozWebView *view)
+{
+    g_return_if_fail(MOZ_IS_WEB_VIEW(view));
+
+    view->priv->view->Reload();
+}
+
+void
+moz_web_view_stop_loading(MozWebView *view)
+{
+    g_return_if_fail(MOZ_IS_WEB_VIEW(view));
+
+    view->priv->view->Stop();
+}
+
+gboolean
+moz_web_view_can_go_back(MozWebView *view)
+{
+    //g_return_if_fail(MOZ_IS_WEB_VIEW(view));
+
+    return view->priv->view->CanGoBack();
+}
+
+gboolean
+moz_web_view_can_go_forward(MozWebView *view)
+{
+    //g_return_if_fail(MOZ_IS_WEB_VIEW(view));
+
+    return view->priv->view->CanGoForward();
 }

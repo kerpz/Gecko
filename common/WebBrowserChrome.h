@@ -46,7 +46,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsWeakReference.h"
+#include "nsEmbedWeakReference.h"
 
 class MozView;
 

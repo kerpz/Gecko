@@ -119,7 +119,7 @@ moz_web_view_get_bool_pref(const char *name,
 {
     g_return_val_if_fail(init_count > 0, FALSE);
 
-    return NS_SUCCEEDED(app->GetBoolPref(name, value));
+    return NS_SUCCEEDED(app->GetBoolPref(name, (bool *)value));
 }
 
 gboolean

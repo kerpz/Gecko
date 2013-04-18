@@ -38,7 +38,7 @@
 #define MOZEMBED_CONSOLELISTENER_H
 
 #include "nsIConsoleListener.h"
-#include "nsWeakReference.h"
+#include "nsEmbedWeakReference.h"
 
 class MozView;
 

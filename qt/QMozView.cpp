@@ -168,7 +168,7 @@ QMozView* QMozView::openWindow(unsigned int flags)
     return 0;
 }
 
-QSize QMozView::sizeHint() const
+QSizeF QMozView::sizeHint(Qt::SizeHint which, const QSizeF &constraint) const
 {
     return mPrivate->preferredSize;
 }

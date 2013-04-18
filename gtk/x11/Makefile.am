@@ -45,7 +45,7 @@ lib_LTLIBRARIES = libmozwebview.la
 
 libmozwebview_la_SOURCES = \
 	../common/moz-web-view-marshal.c \
-	moz-web-view.c \
+	moz-web-view.cpp \
 	../../common/embed.cpp \
 	../../common/WebBrowserChrome.cpp \
 	../../common/EmbeddingSetup.cpp \
@@ -64,13 +64,13 @@ noinst_HEADERS = \
 	$(srcdir)/../common/moz-web-view-marshal.h \
 	$(NULL)
 
-MOZ_CFLAGS = -DMOZ_DLL_SUFFIX="\".so\""
+MOZ_CFLAGS = -DMOZ_DLL_SUFFIX="\".so\"" -DXPCOM_GLUE_USE_NSPR -std=gnu++0x -pthread
 
 CFLAGS += $(MOZ_CFLAGS) $(GTK_CFLAGS) $(LIBXUL_EMBEDDING_CFLAGS) -fno-rtti
 CPPFLAGS += $(CFLAGS)
-LDFLAGS += $(GTK_LIBS) $(LIBXUL_EMBEDDING_LIBS)
+LDFLAGS += $(GTK_LIBS) $(LIBXUL_EMBEDDING_LIBS) -lmozjs -Wl,--whole-archive -lmozglue -lmemory -Wl,--no-whole-archive -rdynamic
 
-pkgconfigdir = $(prefix)/lib/pkgconfig
+pkgconfigdir = $(libdir)/pkgconfig
 
 pkgconfig_DATA = $(top_srcdir)/libmozwebview.pc
 

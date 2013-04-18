@@ -89,7 +89,7 @@ void QMozApp::setIntPref(const QString& name, int value)
 
 bool QMozApp::boolPref(const QString& name) const
 {
-    PRBool result = 0;
+    bool result = 0;
     mPrivate->mozApp.GetBoolPref(name.toUtf8(), &result);
     return result;
 }

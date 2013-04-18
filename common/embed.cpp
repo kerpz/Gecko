@@ -52,6 +52,10 @@
 #include <string>
 using namespace std;
 
+#ifndef UINT32_MAX
+#define UINT32_MAX (0xffffffffU)
+#endif
+
 #include "nsXULAppAPI.h"
 #include "nsXPCOMGlue.h"
 #include "nsCOMPtr.h"
@@ -64,8 +68,7 @@ using namespace std;
 #include "nsIConsoleService.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMWindow2.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIScriptContext.h"
@@ -81,14 +84,13 @@ using namespace std;
 #include "nsIWidget.h"
 #include "nsIWindowCreator2.h"
 #include "nsIWindowWatcher.h"
-#include "nsIXPConnect.h"
 
 // globals
 static nsCOMPtr<WindowCreator> sWindowCreator;
 
-MozApp::MozApp(const char* aProfilePath, const char* aEmbedPath)
+MozApp::MozApp(const char* aProfilePath)
 {
-    nsresult rv = InitEmbedding(aProfilePath, aEmbedPath);
+    nsresult rv = InitEmbedding(aProfilePath);
     if (NS_FAILED(rv)) {
         NS_RUNTIMEABORT("Embedding initialization failed!");
     }
@@ -139,7 +141,7 @@ nsresult MozApp::GetCharPref(const char *aName, char **aValue)
     return pref->GetCharPref(aName, aValue);
 }
 
-nsresult MozApp::GetBoolPref(const char *aName, PRBool *aValue)
+nsresult MozApp::GetBoolPref(const char *aName, bool *aValue)
 {
     nsresult rv;
 
@@ -176,12 +178,13 @@ public:
             cerr << "Failed to get Console service!" << endl;
         else if (NS_FAILED(consoleService->UnregisterListener(mConsoleListener)))
             cerr << "Failed to unregister console listener." << endl;
+
         // disconnect listener before window destroy
         nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(mChrome);
         nsCOMPtr<nsIWeakReference> thisListener(do_GetWeakReference(listener));
         if (mWebBrowser)
             mWebBrowser->RemoveWebBrowserListener(thisListener, NS_GET_IID(nsIWebProgressListener));
-        thisListener = nsnull;
+        thisListener = nullptr;
 
         if (mChrome)
             mChrome->SetWebBrowser(0);
@@ -213,7 +216,7 @@ public:
     MozView* mParentView;
 
     nsCOMPtr<nsIWebBrowser> mWebBrowser;
-    nsCOMPtr<nsIDOMWindow2> mDOMWindow;
+    nsCOMPtr<nsIDOMWindow> mDOMWindow;
     nsCOMPtr<nsIWebNavigation> mWebNavigation;
     nsCOMPtr<nsIWebBrowserChrome> mChrome;
     nsCOMPtr<nsIURIContentListener> mContentListener;
@@ -267,7 +270,7 @@ NS_IMETHODIMP
 WindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
                                    PRUint32 aChromeFlags,
                                    PRUint32 /*aContextFlags*/,
-                                   nsIURI * /*aUri*/, PRBool * /*aCancel*/,
+                                   nsIURI * /*aUri*/, bool * /*aCancel*/,
                                    nsIWebBrowserChrome **_retval)
 {
     return CreateChromeWindow(aParent, aChromeFlags, _retval);
@@ -364,6 +367,7 @@ nsresult MozView::CreateBrowser(void* aParentWindow,
 
     // register the DOM event listener
     mPrivate->mDOMEventListener = new DOMEventListener(this);
+
     // register the console event listener
     mPrivate->mConsoleListener = new ConsoleListener(this);
     if (!mPrivate->mConsoleListener)
@@ -374,6 +378,7 @@ nsresult MozView::CreateBrowser(void* aParentWindow,
         cerr << "Failed to get Console service!" << endl;
     else if (NS_FAILED(consoleService->RegisterListener(mPrivate->mConsoleListener)))
         cerr << "Failed to register console listener." << endl;
+
     SetFocus(true);
 
     return NS_OK;
@@ -440,16 +445,16 @@ nsresult MozView::GoForward()
     return mPrivate->mWebNavigation->GoForward();
 }
 
-PRBool MozView::CanGoBack()
+bool MozView::CanGoBack()
 {
-    PRBool allowBack;
+    bool allowBack;
     mPrivate->mWebNavigation->GetCanGoBack(&allowBack);
     return allowBack;
 }
 
-PRBool MozView::CanGoForward()
+bool MozView::CanGoForward()
 {
-    PRBool allowForward;
+    bool allowForward;
     mPrivate->mWebNavigation->GetCanGoForward(&allowForward);
     return allowForward;
 }
@@ -532,7 +537,7 @@ void * MozView::GetBrowser()
     return mPrivate->mWebBrowser;
 }
 
-nsIDOMWindow2 * MozView::GetDOMWindow()
+nsIDOMWindow * MozView::GetDOMWindow()
 {
     return mPrivate->mDOMWindow;
 }
@@ -547,7 +552,7 @@ bool MozView::FindText(const PRUnichar * aSubString,
                        bool aEntireWord, bool aBackwards)
 {
     nsAutoString str(aSubString);
-    PRBool result;
+    bool result;
     nsCOMPtr<nsIDOMWindowInternal> dom_window_internal =
             do_QueryInterface(mPrivate->mDOMWindow);
     dom_window_internal->Find(str,
@@ -567,22 +572,9 @@ char* MozView::EvaluateJavaScript(const char* aScript)
     nsCOMPtr<nsIScriptContext> ctx = sgo->GetContext();
     nsString retval;
     nsCOMPtr<nsIScriptObjectPrincipal> sgoPrincipal = do_QueryInterface(sgo);
-    nsresult rv;
-    JSObject * jsobj = sgo->GetGlobalJSObject();
-    nsCOMPtr<nsIXPConnect> xpconnect = do_GetService(nsIXPConnect::GetCID(), &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-        JSContext * jsctx = static_cast<JSContext*>(ctx->GetNativeContext());
-        JSObject * jsunwrapped;
-        rv = xpconnect->GetJSObjectOfWrapper(jsctx, jsobj, &jsunwrapped);
-        if (NS_SUCCEEDED(rv))
-        {
-            jsobj = jsunwrapped;
-        }
-    }
-    ctx->EvaluateString(NS_ConvertUTF8toUTF16(aScript), jsobj,
-                        sgoPrincipal->GetPrincipal(),
-                        "mozembed", 0, nsnull, &retval, nsnull);
+    ctx->EvaluateString(NS_ConvertUTF8toUTF16(aScript), sgo->GetGlobalJSObject(),
+                        sgoPrincipal->GetPrincipal(), sgoPrincipal->GetPrincipal(),
+                        "mozembed", 0, JSVERSION_DEFAULT, &retval, nullptr);
 
     NS_ConvertUTF16toUTF8 retvalUtf8(retval);
     char* temp = new char[retvalUtf8.Length() + 1];
@@ -655,9 +647,4 @@ void MozViewListener::OnConsoleMessage(const char * /*aMessage*/)
 
 void MozViewListener::OnFocusChanged(PRBool /*aForward*/)
 {
-}
-
-nsresult MozViewListener::OnDestroyWindow()
-{
-    return NS_OK;
 }

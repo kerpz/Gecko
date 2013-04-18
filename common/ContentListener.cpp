@@ -64,10 +64,10 @@ NS_IMPL_ISUPPORTS2(ContentListener,
                    nsISupportsWeakReference)
 
 NS_IMETHODIMP
-ContentListener::OnStartURIOpen(nsIURI *aURI, PRBool *aAbortOpen)
+ContentListener::OnStartURIOpen(nsIURI *aURI, bool *aAbortOpen)
 {
     nsresult rv;
-    nsCAutoString specString;
+    nsCString specString;
     rv = aURI->GetSpec(specString);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -82,10 +82,10 @@ ContentListener::OnStartURIOpen(nsIURI *aURI, PRBool *aAbortOpen)
 
 NS_IMETHODIMP
 ContentListener::DoContent(const char * /*aContentType*/,
-                           PRBool /*aIsContentPreferred*/,
+                           bool /*aIsContentPreferred*/,
                            nsIRequest * /*aRequest*/,
                            nsIStreamListener ** /*aContentHandler*/,
-                           PRBool * /*aAbortProcess*/)
+                           bool * /*aAbortProcess*/)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -93,7 +93,7 @@ ContentListener::DoContent(const char * /*aContentType*/,
 NS_IMETHODIMP
 ContentListener::IsPreferred(const char * aContentType,
                              char ** aDesiredContentType,
-                             PRBool * aCanHandleContent)
+                             bool * aCanHandleContent)
 {
     return CanHandleContent(aContentType, PR_TRUE, aDesiredContentType,
                             aCanHandleContent);
@@ -101,12 +101,12 @@ ContentListener::IsPreferred(const char * aContentType,
 
 NS_IMETHODIMP
 ContentListener::CanHandleContent(const char * aContentType,
-                                  PRBool /*aIsContentPreferred*/,
+                                  bool /*aIsContentPreferred*/,
                                   char ** aDesiredContentType,
-                                  PRBool * _retval)
+                                  bool * _retval)
 {
     *_retval = PR_FALSE;
-    *aDesiredContentType = nsnull;
+    *aDesiredContentType = nullptr;
 
     if (!aContentType)
         return NS_ERROR_FAILURE;
@@ -117,7 +117,7 @@ ContentListener::CanHandleContent(const char * aContentType,
 
     PRUint32 canHandle;
     nsresult rv = webNavInfo->IsTypeSupported(nsDependentCString(aContentType),
-                                    mNavigation ? mNavigation.get() : nsnull,
+                                    mNavigation ? mNavigation.get() : nullptr,
                                     &canHandle);
     NS_ENSURE_SUCCESS(rv, rv);
 

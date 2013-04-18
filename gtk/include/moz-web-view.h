@@ -34,6 +34,13 @@ void       moz_web_view_load_data      (MozWebView  *view,
                                         const gchar *data,
                                         gsize        len);
 
+void	       moz_web_view_go_back          (MozWebView *view);
+void	  	   moz_web_view_go_forward       (MozWebView *view);
+void	  	   moz_web_view_reload           (MozWebView *view);
+void		   moz_web_view_stop_loading     (MozWebView *view);
+gboolean	   moz_web_view_can_go_back      (MozWebView *view);
+gboolean	   moz_web_view_can_go_forward   (MozWebView *view);
+
 /* Apis implemented in common/moz-web-view-common.cpp follow */
 gchar *    moz_web_view_get_requested_uri (MozWebView  *view);
 gchar *    moz_web_view_get_title         (MozWebView  *view);

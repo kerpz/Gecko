@@ -121,18 +121,7 @@ NS_IMETHODIMP WebBrowserChrome::SetChromeFlags(PRUint32 aChromeFlags)
 NS_IMETHODIMP WebBrowserChrome::DestroyBrowserWindow()
 {
     if (mIsModal)
-    {
         ExitModalEventLoop(NS_OK);
-    }
-    else
-    {
-        MozViewListener * pListener = pMozView->GetListener();
-        if (!pListener)
-            return NS_ERROR_NOT_IMPLEMENTED;
-            
-        return pListener->OnDestroyWindow();
-    }
-
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -158,7 +147,7 @@ NS_IMETHODIMP WebBrowserChrome::ShowAsModal()
     return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::IsWindowModal(PRBool *_retval)
+NS_IMETHODIMP WebBrowserChrome::IsWindowModal(bool *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
     *_retval = mIsModal;
@@ -222,9 +211,10 @@ NS_IMETHODIMP WebBrowserChrome::OnProgressChange(nsIWebProgress * /*aWebProgress
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP WebBrowserChrome::OnLocationChange(nsIWebProgress * /*aWebProgress*/,
+NS_IMETHODIMP WebBrowserChrome::OnLocationChange(nsIWebProgress *aWebProgress,
                                                  nsIRequest * /*aRequest*/,
-                                                 nsIURI *aLocation)
+                                                 nsIURI *aLocation,
+                                                 PRUint32 aFlags)
 {
     NS_ENSURE_ARG_POINTER(aLocation);
 
@@ -281,14 +271,19 @@ NS_IMETHODIMP WebBrowserChrome::SetFocus()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP WebBrowserChrome::GetVisibility(PRBool * aVisibility)
+NS_IMETHODIMP WebBrowserChrome::Blur()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP WebBrowserChrome::GetVisibility(bool * aVisibility)
 {
     NS_ENSURE_ARG_POINTER(aVisibility);
     *aVisibility = PR_TRUE;
     return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::SetVisibility(PRBool aVisibility)
+NS_IMETHODIMP WebBrowserChrome::SetVisibility(bool aVisibility)
 {
     MozViewListener* pListener = pMozView->GetListener();
     if (!pListener)

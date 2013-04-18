@@ -79,7 +79,7 @@ static int gInitCount = 0;
 // ------------------------------------------------------------------------
 
 nsIDirectoryServiceProvider *sAppFileLocProvider = 0;
-nsCOMPtr<nsILocalFile> sProfileDir = 0;
+nsCOMPtr<nsIFile> sProfileDir = 0;
 nsISupports * sProfileLock = 0;
 
 class MozEmbedDirectoryProvider : public nsIDirectoryServiceProvider2
@@ -109,7 +109,7 @@ MozEmbedDirectoryProvider::Release()
 }
 
 NS_IMETHODIMP
-MozEmbedDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
+MozEmbedDirectoryProvider::GetFile(const char *aKey, bool *aPersist,
                                    nsIFile* *aResult)
 {
     if (sAppFileLocProvider) {
@@ -149,7 +149,7 @@ MozEmbedDirectoryProvider::GetFiles(const char *aKey,
     return dp2->GetFiles(aKey, aResult);
 }
 
-nsresult InitEmbedding(const char* aProfilePath, const char* aEmbedPath)
+nsresult InitEmbedding(const char* aProfilePath)
 {
     nsresult rv;
 
@@ -157,6 +157,7 @@ nsresult InitEmbedding(const char* aProfilePath, const char* aEmbedPath)
     if (gInitCount > 1)
         return NS_OK;
 
+#if 0
     // Find the GRE (xul shared lib). We are only using frozen interfaces, so we
     // should be compatible all the way up to (but not including) mozilla 2.0
     static const GREVersionRange vr = {
@@ -167,21 +168,37 @@ nsresult InitEmbedding(const char* aProfilePath, const char* aEmbedPath)
     };
     // find xpcom shared lib (uses GRE_HOME env var if set)
     char temp[MAX_PATH];
-    rv = GRE_GetGREPathWithProperties(&vr, 1, nsnull, 0, temp, sizeof(temp));
+    rv = GRE_GetGREPathWithProperties(&vr, 1, nullptr, 0, temp, sizeof(temp));
     string xpcomPath(temp);
+#else
+
+#if __WORDSIZE == 64
+    string xpcomPath("/usr/lib64/xulrunner/libxpcom.so");
+#else
+    string xpcomPath("/usr/lib/xulrunner/libxpcom.so");
+#endif
+
+    const char* greHome = getenv("GRE_HOME");
+    printf("GRE_HOME: %s\n", greHome);
+    if (greHome) {
+	xpcomPath = greHome;
+	xpcomPath += "/libxpcom.so";
+    }
+
+#endif
+
     cout << "xpcom: " << xpcomPath << endl;
 
     if (NS_FAILED(rv)) {
         cerr << "Unable to find GRE, try setting GRE_HOME." << endl;
-        //return 1;
-	xpcomPath = aEmbedPath;
+        return NS_ERROR_FAILURE;
     }
 
     // start the glue, i.e. load and link against xpcom shared lib
     rv = XPCOMGlueStartup(xpcomPath.c_str());
     if (NS_FAILED(rv)) {
         cerr << "Could not start XPCOM glue." << endl;
-        return 2;
+        return NS_ERROR_FAILURE;
     }
 
     // get rid of the bogus TLS warnings
@@ -199,28 +216,28 @@ nsresult InitEmbedding(const char* aProfilePath, const char* aEmbedPath)
     rv = XPCOMGlueLoadXULFunctions(nsFuncs);
     if (NS_FAILED(rv)) {
         cerr << "Could not load XUL functions." << endl;
-        return 4;
+        return NS_ERROR_FAILURE;
     }
 
     // strip the filename from xpcom so we have the dir instead
     size_t lastslash = xpcomPath.find_last_of("/\\");
     if (lastslash == string::npos) {
         cerr << "Invalid path to xpcom:" << xpcomPath << "." << endl;
-        return 3;
+        return NS_ERROR_FAILURE;
     }
     string xpcomDir = xpcomPath.substr(0, lastslash);
 
     // create nsILocalFile pointing to xpcomDir
-    nsCOMPtr<nsILocalFile> xuldir;
+    nsCOMPtr<nsIFile> xuldir;
     rv = NS_NewNativeLocalFile(nsCString(xpcomDir.c_str()), PR_FALSE,
                                getter_AddRefs(xuldir));
     if (NS_FAILED(rv)) {
         cerr << "Unable to create nsILocalFile for xuldir " << xpcomDir
              << "." << endl;
-        return 6;
+        return NS_ERROR_FAILURE;
     }
 
-    // create nsILocalFile pointing to appdir
+    // create nsIFile pointing to appdir
     char self[MAX_PATH];
 #ifdef WIN32
     GetModuleFileNameA(GetModuleHandle(NULL), self, sizeof(self));
@@ -234,17 +251,17 @@ nsresult InitEmbedding(const char* aProfilePath, const char* aEmbedPath)
     lastslash = selfPath.find_last_of("/\\");
     if (lastslash == string::npos) {
         cerr << "Invalid module filename: " << self << "." << endl;
-        return 7;
+        return NS_ERROR_FAILURE;
     }
 
     selfPath = selfPath.substr(0, lastslash);
 
-    nsCOMPtr<nsILocalFile> appdir;
+    nsCOMPtr<nsIFile> appdir;
     rv = NS_NewNativeLocalFile(nsCString(selfPath.c_str()), PR_FALSE,
                                getter_AddRefs(appdir));
     if (NS_FAILED(rv)) {
         cerr << "Unable to create nsILocalFile for appdir." << endl;
-        return 8;
+        return NS_ERROR_FAILURE;
     }
 
     // setup profile dir
@@ -263,7 +280,7 @@ nsresult InitEmbedding(const char* aProfilePath, const char* aEmbedPath)
     }
 
     // create dir if needed
-    PRBool dirExists;
+    bool dirExists;
     rv = sProfileDir->Exists(&dirExists);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!dirExists) {
@@ -281,7 +298,7 @@ nsresult InitEmbedding(const char* aProfilePath, const char* aEmbedPath)
                            const_cast<MozEmbedDirectoryProvider*>(&kDirectoryProvider));
     if (NS_FAILED(rv)) {
         cerr << "XRE_InitEmbedding2 failed." << endl;
-        return 9;
+        return NS_ERROR_FAILURE;
     }
 
     // initialize profile:

@@ -41,14 +41,16 @@
 #ifndef MOZEMBED_EMBED_H
 #define MOZEMBED_EMBED_H
 
+#include <stdint.h>
 #include "prtypes.h"
+#include "nsError.h"
 
-typedef PRUint32 nsresult;
+#define UINT32_MAX std::numeric_limits<uint32_t>::max ()
 
 class MozViewListener;
 class WindowCreator;
 
-class nsIDOMWindow2;
+class nsIDOMWindow;
 class nsIDOMWindowInternal;
 class nsIInterfaceRequestor;
 class nsIWebNavigation;
@@ -68,10 +70,8 @@ public:
      *  mozembed of the application dir (where the executable
      *  recides). <b>NOTE:</b> Must be set before any MozView
      *  is created, otherwise the default is used.
-     *  @param aEmbedPath is an optional path to the xpcom.dll
-     *  and is used when we are embedded.
      */
-    MozApp(const char* aProfilePath = 0, const char* aEmbedPath = 0);
+    MozApp(const char* aProfilePath = 0);
 
     /**
      * Destructor.
@@ -123,7 +123,7 @@ public:
      * @param aValue the result is stored here.
      * @return 0 on success
      */
-    nsresult GetBoolPref(const char *aName, PRBool *aValue);
+    nsresult GetBoolPref(const char *aName, bool *aValue);
 
     /**
      * Get an integer preference.
@@ -239,14 +239,14 @@ public:
      *
      * @return true if the browser can go back, false if not
      */
-    PRBool CanGoBack();
+    bool CanGoBack();
 
     /**
      * Indicates if the browser can go forward.
      *
      * @return true if the browser can go forward, false if not
      */
-    PRBool CanGoForward();
+    bool CanGoForward();
 
     /**
      * Change focus for the browser view.
@@ -331,11 +331,11 @@ public:
     void * GetBrowser();
 
     /**
-     * Convenience method to get the nsIDOMWindow2.
+     * Convenience method to get the nsIDOMWindow.
      *
      * @return A pointer to the DOMWindow interface.
      */
-    nsIDOMWindow2 * GetDOMWindow();
+    nsIDOMWindow * GetDOMWindow();
 
     /**
      * Convenience method to get the nsIWebNavigation.
@@ -504,11 +504,6 @@ public:
      *                    previous sibling is to be focused (Shift-Tab)
      */
     virtual void OnFocusChanged(PRBool aForward);
-    
-    /**
-     * Inform the application about a Close Window request
-     */
-    virtual nsresult OnDestroyWindow();
 
 protected:
     MozView* mMozView;

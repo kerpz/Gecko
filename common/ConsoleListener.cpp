@@ -37,9 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "ConsoleListener.h"
+#include "embed.h"
+
 #include "nsStringAPI.h"
 
-#include "embed.h"
 
 NS_IMPL_ISUPPORTS1(ConsoleListener,
                    nsIConsoleListener)

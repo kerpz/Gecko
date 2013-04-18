@@ -41,8 +41,9 @@
 
 #include "nsIDirectoryService.h"
 #include "prtypes.h"
+#include "nsError.h"
 
-typedef PRUint32 nsresult;
+//typedef PRUint32 nsresult;
 
 /**
  * Initializes embedding, i.e. loads needed libs do other needed setup.
@@ -54,11 +55,8 @@ typedef PRUint32 nsresult;
  * @param aProfilePath Optional argument to set the path where
  *  profile data is stored. The directory will be created if it
  *  doesn't exist.
- * @param aEmbedPath Optional path to the actual xulrunner code,
- *  to use a specific version rather than any registered version.
  */
-nsresult InitEmbedding(const char* aProfilePath = 0,
-                       const char* aEmbedPath = 0);
+nsresult InitEmbedding(const char* aProfilePath = 0);
 
 /**
  * Terminates embedding, i.e. does teardown and unloads needed libs.

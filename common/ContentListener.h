@@ -40,7 +40,7 @@
 
 #include "nsIURIContentListener.h"
 
-#include "nsWeakReference.h"
+#include "nsEmbedWeakReference.h"
 #include "nsIWebNavigation.h"
 
 #include "embed.h"

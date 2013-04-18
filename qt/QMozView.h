@@ -61,7 +61,7 @@ public:
     void getInterfaceRequestor(nsIInterfaceRequestor** aRequestor);
     QString evaluateJavaScript(const QString& script);
 
-    virtual QSize sizeHint() const;
+    QSizeF sizeHint(Qt::SizeHint which, const QSizeF &constraint = QSizeF()) const;
 
     bool findText(const QString & sub_string,
                   bool case_sensitive = false, bool wrap = false,
